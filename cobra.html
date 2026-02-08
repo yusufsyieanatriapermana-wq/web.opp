@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keep Clone</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+/* --- 1. Reset & Base Styles --- */
+* { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; 
+}
+
+body { 
+    font-family: 'Roboto', Arial, sans-serif; 
+    margin: 0; 
+    background-color: #ffffff; 
+    color: #202124;
+    overflow-x: hidden;
+}
+
+/* --- 2. Header & Navigation --- */
+header {
+    height: 64px;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 100;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    height: 100%;
+}
+
+.header-left { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+}
+
+header h1 { 
+    font-size: 22px; 
+    font-weight: 400; 
+    margin: 0; 
+    color: #5f6368; 
+}
+
+/* --- 3. Search Overlay --- */
+.search-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: white;
+    display: none; 
+    align-items: center;
+    padding: 0 16px;
+    gap: 8px;
+    z-index: 110;
+}
+
+#searchInput {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    padding: 10px;
+    background: transparent;
+}
+
+/* --- 4. Sidebar System --- */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 280px;
+    height: 100%;
+    background: white;
+    z-index: 1000;
+    transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+}
+
+.sidebar.active { left: 0; }
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(60, 64, 67, 0.5);
+    z-index: 999;
+    display: none;
+    backdrop-filter: blur(2px);
+}
+
+.sidebar-header {
+    padding: 24px 16px 12px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    color: #5f6368;
+}
+
+.menu-item {
+    padding: 14px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    margin: 4px 8px;
+    border-radius: 0 25px 25px 0;
+    color: #202124;
+}
+
+.menu-item:hover { background-color: #f1f3f4; }
+
+.menu-item.active { 
+    background-color: #feefc3; 
+    color: #e37400;
+    font-weight: 500;
+}
+
+.menu-item span {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* --- 5. Notes Grid --- */
+#notesContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    padding: 16px;
+}
+
+.note-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 14px;
+    background: white;
+    cursor: pointer;
+    word-wrap: break-word;
+    transition: box-shadow 0.2s;
+    height: fit-content;
+}
+
+.note-card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+
+.note-title { 
+    font-weight: 600; 
+    margin-bottom: 8px; 
+    font-size: 16px; 
+}
+
+.note-content { 
+    font-size: 14px; 
+    color: #3c4043; 
+    line-height: 1.4;
+    white-space: pre-wrap;
+}
+
+/* Gambar di dalam kartu utama */
+.note-card img {
+    width: 100%;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* --- 6. Editor Page --- */
+.editor-page {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: white;
+    z-index: 200;
+    display: none; 
+    flex-direction: column;
+}
+
+.editor-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.editor-fields {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+#noteTitle {
+    font-size: 22px;
+    border: none; outline: none;
+    margin-bottom: 12px;
+    font-weight: 400;
+}
+
+.category-select {
+    padding: 4px 12px;
+    margin-bottom: 16px;
+    border: 1px solid #dadce0;
+    border-radius: 18px;
+    width: fit-content;
+    font-size: 12px;
+    background: white;
+    color: #5f6368;
+    outline: none;
+}
+
+#noteText {
+    font-size: 16px;
+    border: none; outline: none;
+    resize: none;
+    flex-grow: 1;
+    line-height: 1.5;
+}
+
+/* Gambar di Editor */
+#imagePreviewContainer {
+    width: 100%;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#imagePreview {
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    background: #f8f9fa;
+}
+
+/* --- 7. FAB & Buttons --- */
+.fab {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    width: 56px; height: 56px;
+    background: white;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.24);
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+    z-index: 90;
+}
+
+.fab:hover { box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
+
+.pencil-icon {
+    width: 24px; height: 24px;
+    background-color: #4285f4;
+    mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>') center/contain no-repeat;
+    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>') center/contain no-repeat;
+}
+
+.icon-btn { 
+    background: none; border: none; 
+    font-size: 20px; color: #5f6368; 
+    cursor: pointer; padding: 12px; 
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}
+.icon-btn:hover { background-color: #f1f3f4; }
+
+.btn-done { 
+    background: none; border: none; 
+    color: #1a73e8; font-weight: 600; 
+    font-size: 15px; cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 4px;
+}
+.btn-done:hover { background-color: rgba(26, 115, 232, 0.04); }
+
+/* --- 8. Toast & Utilities --- */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #323232;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 14px;
+    z-index: 2000;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+.char-counter { 
+    text-align: right; font-size: 11px; 
+    color: #80868b; margin-top: 10px; 
+}
+
+.hidden { display: none !important; }
+hr { border: 0; border-top: 1px solid #e0e0e0; margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <header>
+        <div id="defaultHeader" class="header-content">
+            <div class="header-left">
+                <div class="menu-icon"><i class="bi bi-list"></i></div>
+                <h1>Keep</h1>
+            </div>
+            <div class="header-right">
+                <div id="btnOpenSearch" class="icon-btn"><i class="bi bi-search"></i></div>
+            </div>
+        </div>
+
+        <div id="searchBar" class="search-overlay">
+            <button id="btnCloseSearch" class="icon-btn"><i class="bi bi-arrow-left"></i></button>
+            <input type="text" id="searchInput" placeholder="Cari catatan..." autocomplete="off">
+        </div>
+    </header>
+
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h2>Kategori</h2>
+        </div>
+        <div class="sidebar-menu">
+            <div id="dynamicCategories"></div>
+            <hr>
+            <div class="menu-item" data-category="Trash" id="menuTrash">
+                <span class="icon"><i class="bi bi-trash3"></i></span> Sampah
+            </div>
+            <hr>
+            <div class="menu-item" id="btnAddCategory" style="color: #1a73e8;">
+                <span class="icon"><i class="bi bi-plus-lg"></i></span> Buat Kategori Baru
+            </div>
+            <div class="menu-item" id="menuDeleteAll" style="color: #d93025;">
+                <span class="icon"><i class="bi bi-exclamation-octagon"></i></span> Hapus Semua
+            </div>
+        </div>
+    </div>
+
+    <main id="notesContainer"></main>
+
+    <div class="fab" id="fabAdd">
+        <div class="pencil-icon"></div>
+    </div>
+
+    <div id="noteEditor" class="editor-page">
+        <nav class="editor-nav">
+            <div class="nav-left">
+                <button id="btnBack" class="icon-btn"><i class="bi bi-arrow-left"></i></button>
+            </div>
+            <div class="nav-right" style="display: flex; align-items: center; gap: 10px;">
+                <label for="imageInput" class="icon-btn" style="cursor: pointer; margin: 0;">
+                    <i class="bi bi-image"></i>
+                    <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                </label>
+                <button id="btnSave" class="btn-done">Selesai</button>
+            </div>
+        </nav>
+
+        <div class="editor-fields">
+            <input type="text" id="noteTitle" placeholder="Judul" maxlength="100">
+            
+            <div id="imagePreviewContainer" style="display: none; position: relative; margin-bottom: 15px;">
+                <img id="imagePreview" src="" style="width: 100%; border-radius: 8px; display: block; object-fit: cover;">
+                <button id="btnRemoveImage" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-x-lg" style="font-size: 14px;"></i>
+                </button>
+            </div>
+            
+            <select id="noteCategory" class="category-select">
+                </select>
+
+            <textarea id="noteText" placeholder="Catatan"></textarea>
+            
+            <div id="charCounter" class="char-counter">0 / 10.000 karakter</div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+</body>
+    <script>
+    // --- 1. DEKLARASI ELEMEN ---
+const notesContainer = document.getElementById('notesContainer');
+const noteEditor = document.getElementById('noteEditor');
+const fabAdd = document.getElementById('fabAdd');
+const btnSave = document.getElementById('btnSave');
+const btnBack = document.getElementById('btnBack');
+const noteTitle = document.getElementById('noteTitle');
+const noteText = document.getElementById('noteText');
+const charCounter = document.getElementById('charCounter');
+const noteCategorySelect = document.getElementById('noteCategory');
+const defaultHeader = document.getElementById('defaultHeader');
+const searchBar = document.getElementById('searchBar');
+const btnOpenSearch = document.getElementById('btnOpenSearch');
+const btnCloseSearch = document.getElementById('btnCloseSearch');
+const searchInput = document.getElementById('searchInput');
+const menuIcon = document.querySelector('.menu-icon');
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+const menuDeleteAll = document.getElementById('menuDeleteAll');
+const dynamicCategories = document.getElementById('dynamicCategories');
+const btnAddCategory = document.getElementById('btnAddCategory');
+
+// Elemen Gambar
+const imageInput = document.getElementById('imageInput');
+const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+const imagePreview = document.getElementById('imagePreview');
+const btnRemoveImage = document.getElementById('btnRemoveImage');
+
+// --- 2. VARIABEL GLOBAL ---
+let currentEditId = null;
+let pressTimer;
+const MAX_CHARS = 10000;
+const systemCategories = ["Pribadi", "Kerja", "Kuliah"];
+let categories = JSON.parse(localStorage.getItem('keepCategories')) || [...systemCategories];
+let currentCategory = "Semua";
+
+// Variabel untuk Deteksi Perubahan (Penting untuk Fitur Back)
+let originalTitle = "";
+let originalText = "";
+let originalImageData = null;
+let currentImageData = null;
+
+// --- 3. INISIALISASI ---
+document.addEventListener('DOMContentLoaded', () => {
+    cleanOldTrash(); 
+    renderCategories();
+    displayNotes();
+});
+noteText.setAttribute('maxlength', MAX_CHARS);
+
+// --- 4. FUNGSI KATEGORI ---
+function renderCategories() {
+    dynamicCategories.innerHTML = `
+        <div class="menu-item ${currentCategory === 'Semua' ? 'active' : ''}" onclick="selectCategory('Semua')">
+            <span><i class="bi bi-journal-text icon"></i> Semua Catatan</span>
+        </div>
+    `;
+
+    categories.forEach(cat => {
+        const isSystem = systemCategories.includes(cat);
+        const item = document.createElement('div');
+        item.className = `menu-item ${currentCategory === cat ? 'active' : ''}`;
+        const deleteBtn = !isSystem ? `<i class="bi bi-x-circle delete-cat-btn" onclick="deleteCategory('${cat}', event)"></i>` : ``;
+        const catIcon = isSystem ? 'bi-pin-angle-fill' : 'bi-folder2';
+
+        item.innerHTML = `
+            <span onclick="selectCategory('${cat}')" style="flex-grow:1; display:flex; align-items:center; gap:12px;">
+                <i class="bi ${catIcon} icon"></i> ${cat}
+            </span>
+            ${deleteBtn}
+        `;
+        dynamicCategories.appendChild(item);
+    });
+
+    noteCategorySelect.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+}
+
+function selectCategory(cat) {
+    currentCategory = cat;
+    renderCategories();
+    displayNotes();
+    closeSidebar();
+}
+
+function deleteCategory(catName, event) {
+    event.stopPropagation();
+    if (confirm(`Hapus kategori "${catName}"?`)) {
+        categories = categories.filter(c => c !== catName);
+        localStorage.setItem('keepCategories', JSON.stringify(categories));
+        let notes = JSON.parse(localStorage.getItem('keepNotes')) || [];
+        notes = notes.map(n => n.category === catName ? { ...n, category: "Pribadi" } : n);
+        localStorage.setItem('keepNotes', JSON.stringify(notes));
+        if (currentCategory === catName) currentCategory = "Semua";
+        renderCategories();
+        displayNotes();
+    }
+}
+
+btnAddCategory.onclick = () => {
+    const newCat = prompt("Nama kategori baru:");
+    if (newCat && newCat.trim()) {
+        const catName = newCat.trim();
+        if (!categories.includes(catName)) {
+            categories.push(catName);
+            localStorage.setItem('keepCategories', JSON.stringify(categories));
+            renderCategories();
+        }
+    }
+};
+
+// --- 5. FUNGSI UTAMA (NOTES) ---
+function displayNotes() {
+    const notes = JSON.parse(localStorage.getItem('keepNotes')) || [];
+    notesContainer.innerHTML = "";
+    const now = Date.now();
+    const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+    
+    fabAdd.style.display = (currentCategory === "Trash") ? "none" : "flex";
+
+    let filteredNotes = (currentCategory === "Trash") 
+        ? notes.filter(n => n.deletedAt) 
+        : notes.filter(n => !n.deletedAt && (currentCategory === "Semua" || n.category === currentCategory));
+
+    filteredNotes.forEach(note => {
+        const card = document.createElement('div');
+        card.className = 'note-card';
+        
+        let labelHTML = note.deletedAt 
+            ? `<div style="font-size: 10px; color: #d93025; margin-bottom: 5px; font-weight:bold;">Hapus otomatis: ${Math.ceil((thirtyDaysInMs - (now - note.deletedAt)) / 86400000)} hari</div>`
+            : `<div style="font-size: 10px; color: #1a73e8; margin-bottom: 5px; font-weight:bold;">${note.category || 'Pribadi'}</div>`;
+
+        let imgHTML = note.image ? `<img src="${note.image}">` : '';
+
+        card.innerHTML = `${labelHTML}${imgHTML}<div class="note-title">${note.title || ''}</div><div class="note-content">${note.text || ''}</div>`;
+        setupInteractions(card, note);
+        notesContainer.appendChild(card);
+    });
+}
+
+function openEditor(note = null) {
+    if (note) {
+        currentEditId = note.id;
+        noteTitle.value = note.title || "";
+        noteText.value = note.text || "";
+        noteCategorySelect.value = note.category || "Pribadi";
+        currentImageData = note.image || null;
+
+        originalTitle = note.title || "";
+        originalText = note.text || "";
+        originalImageData = note.image || null;
+    } else {
+        currentEditId = null;
+        noteTitle.value = "";
+        noteText.value = "";
+        noteCategorySelect.value = categories[0];
+        currentImageData = null;
+
+        originalTitle = "";
+        originalText = "";
+        originalImageData = null;
+    }
+
+    if (currentImageData) {
+        imagePreview.src = currentImageData;
+        imagePreviewContainer.style.display = 'block';
+    } else {
+        imagePreview.src = "";
+        imagePreviewContainer.style.display = 'none';
+    }
+
+    noteEditor.style.display = 'flex';
+    updateCharCount();
+    noteText.focus();
+}
+
+function saveNote() {
+    const title = noteTitle.value.trim();
+    const text = noteText.value.trim();
+    const category = noteCategorySelect.value;
+
+    if (!title && !text && !currentImageData) {
+        showToast("Harap isi judul, catatan, atau gambar");
+        return false;
+    }
+
+    let notes = JSON.parse(localStorage.getItem('keepNotes')) || [];
+
+    if (currentEditId) {
+        notes = notes.map(n => n.id === currentEditId ? { ...n, title, text, category, image: currentImageData } : n);
+        showToast("Catatan diperbarui");
+    } else {
+        notes.unshift({ id: Date.now(), title, text, category, image: currentImageData, deletedAt: null });
+        showToast("Catatan disimpan");
+    }
+
+    localStorage.setItem('keepNotes', JSON.stringify(notes));
+    displayNotes();
+    return true;
+}
+
+function closeEditor(isBack = false) {
+    const title = noteTitle.value.trim();
+    const text = noteText.value.trim();
+    
+    // Bandingkan dengan data awal
+    const isChanged = title !== originalTitle || text !== originalText || currentImageData !== originalImageData;
+
+    if (isBack) {
+        if (isChanged && (title || text || currentImageData)) {
+            const pilihan = confirm("Simpan perubahan sebelum keluar?\n\nOK untuk Simpan, Cancel untuk Buang.");
+            if (pilihan) {
+                if (saveNote()) exitEditor();
+            } else {
+                exitEditor();
+            }
+        } else {
+            exitEditor();
+        }
+    } else {
+        if (saveNote()) exitEditor();
+    }
+}
+
+function exitEditor() {
+    noteEditor.style.display = 'none';
+    currentEditId = null;
+    noteTitle.value = "";
+    noteText.value = "";
+    currentImageData = null;
+}
+
+// --- 6. UTILS & EVENT LISTENERS ---
+function setupInteractions(card, note) {
+    card.onclick = () => note.deletedAt ? confirmDelete(note.id) : openEditor(note);
+    card.onmousedown = card.ontouchstart = () => pressTimer = setTimeout(() => confirmDelete(note.id), 800);
+    card.onmouseup = card.ontouchend = () => clearTimeout(pressTimer);
+}
+
+function confirmDelete(id) {
+    if (navigator.vibrate) navigator.vibrate(50);
+    let notes = JSON.parse(localStorage.getItem('keepNotes')) || [];
+    const idx = notes.findIndex(n => n.id === id);
+
+    if (notes[idx].deletedAt) {
+        const pilihan = confirm("OK untuk PULIHKAN, atau Cancel untuk HAPUS PERMANEN.");
+        if (pilihan) { 
+            delete notes[idx].deletedAt; 
+            showToast("Dipulihkan!");
+        } else { 
+            if (confirm("Hapus permanen?")) notes.splice(idx, 1); 
+        }
+    } else {
+        if (confirm("Pindahkan ke sampah?")) notes[idx].deletedAt = Date.now();
+    }
+    localStorage.setItem('keepNotes', JSON.stringify(notes));
+    displayNotes();
+}
+
+imageInput.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            currentImageData = event.target.result;
+            imagePreview.src = currentImageData;
+            imagePreviewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+btnRemoveImage.onclick = () => {
+    currentImageData = null;
+    imagePreviewContainer.style.display = 'none';
+    imageInput.value = "";
+};
+
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.innerText = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function cleanOldTrash() {
+    let notes = JSON.parse(localStorage.getItem('keepNotes')) || [];
+    const now = Date.now();
+    const clean = notes.filter(n => !n.deletedAt || (now - n.deletedAt) < 2592000000);
+    localStorage.setItem('keepNotes', JSON.stringify(clean));
+}
+
+function updateCharCount() {
+    const len = noteText.value.length;
+    charCounter.innerText = `${len.toLocaleString()} / ${MAX_CHARS.toLocaleString()} karakter`;
+    charCounter.classList.toggle('limit-reached', len >= MAX_CHARS * 0.9);
+}
+
+function closeSidebar() { 
+    sidebar.classList.remove('active'); 
+    sidebarOverlay.style.display = 'none'; 
+}
+
+// Global Event Bindings
+fabAdd.onclick = () => openEditor();
+btnSave.onclick = () => closeEditor(false);
+btnBack.onclick = () => closeEditor(true);
+noteText.oninput = updateCharCount;
+menuIcon.onclick = () => { sidebar.classList.add('active'); sidebarOverlay.style.display = 'block'; };
+sidebarOverlay.onclick = closeSidebar;
+document.getElementById('menuTrash').onclick = () => selectCategory("Trash");
+menuDeleteAll.onclick = () => {
+    if (confirm("Hapus semua catatan di folder ini?")) {
+        let notes = JSON.parse(localStorage.getItem('keepNotes')) || [];
+        if (currentCategory === "Trash") {
+            notes = notes.filter(n => !n.deletedAt);
+        } else if (currentCategory === "Semua") {
+            notes = [];
+        } else {
+            notes = notes.filter(n => n.category !== currentCategory);
+        }
+        localStorage.setItem('keepNotes', JSON.stringify(notes));
+        displayNotes();
+        closeSidebar();
+    }
+};
+
+btnOpenSearch.onclick = () => { defaultHeader.style.display = 'none'; searchBar.style.display = 'flex'; searchInput.focus(); };
+btnCloseSearch.onclick = () => { searchBar.style.display = 'none'; defaultHeader.style.display = 'flex'; searchInput.value = ""; displayNotes(); };
+searchInput.oninput = (e) => {
+    const f = e.target.value.toLowerCase();
+    document.querySelectorAll('.note-card').forEach(c => {
+        const t = c.innerText.toLowerCase();
+        c.classList.toggle('hidden', !t.includes(f));
+    });
+};
+</script>
+</body>
+</html>
